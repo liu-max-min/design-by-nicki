@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>林治佚 — 衍生品设计师档案</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        fontFamily: {
+          sans: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        },
+        colors: {
+          ink: '#0A0A0A',
+          paper: '#F2EFE8',
+          brass: '#C9A961',
+          steel: '#8B95A1',
+        },
+      } },
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.14.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.14.2/ScrollTrigger.min.js"></script>
+  <style>
+    html, body { background: #0A0A0A; color: #F2EFE8; }
+    body { font-feature-settings: "ss01", "ss02", "cv11"; -webkit-font-smoothing: antialiased; }
+
+    /* Video bg */
+    #video-bg video {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 100%; min-height: 100%;
+      object-fit: cover;
+    }
+    /* Tint overlay over video */
+    #video-tint {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(ellipse 90% 60% at 50% 40%, rgba(0,0,0,0.15), rgba(0,0,0,0.65) 80%),
+        linear-gradient(180deg, rgba(10,10,10,0.35) 0%, rgba(10,10,10,0.55) 100%);
+    }
+    /* Subtle grain */
+    #grain {
+      position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.06; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.7 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    }
+
+    /* Layering */
+    .pointer-on { pointer-events: auto; }
+
+    /* Loading screen */
+    #loading {
+      position: fixed; inset: 0; z-index: 50; background: #0A0A0A;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body[data-loaded="true"] #loading {
+      opacity: 0; visibility: hidden; pointer-events: none;
+    }
+    .loader-bar {
+      width: 220px; height: 1px; background: rgba(242,239,232,0.12); position: relative; overflow: hidden;
+    }
+    .loader-bar::after {
+      content: ""; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
+      background: #C9A961; animation: slide 1.4s ease-in-out infinite;
+    }
+    @keyframes slide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+
+    /* ScrollReveal */
+    .scroll-reveal { margin: 0; }
+    .scroll-reveal-text { display: flex; flex-wrap: wrap; margin: 0; }
+    .word { display: inline-block; white-space: pre; }
+
+    /* IO reveal */
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(30px);
+      transition:
+        opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+      transition-delay: calc(var(--reveal-delay, 0) * 1s);
+    }
+    [data-reveal="visible"] { opacity: 1; transform: translateY(0); }
+
+    /* Glass */
+    .glass {
+      background: rgba(15,15,15,0.35);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      border: 1px solid rgba(242,239,232,0.08);
+    }
+
+    /* Hairline underline on hover */
+    .link-hairline { position: relative; display: inline-block; }
+    .link-hairline::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: -3px;
+      height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .link-hairline:hover::after { transform: scaleX(1); }
+
+    /* Marquee */
+    .marquee { overflow: hidden; }
+    .marquee-track {
+      display: inline-flex; gap: 3rem; animation: marq 38s linear infinite; white-space: nowrap;
+    }
+    @keyframes marq { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    /* Big numeral */
+    .numeral { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+    /* Selection */
+    ::selection { background: #C9A961; color: #0A0A0A; }
+
+    /* Index row hover */
+    .idx-row { transition: background 0.4s ease, padding 0.4s ease; }
+    .idx-row:hover { background: rgba(242,239,232,0.03); padding-left: 8px; }
+    .idx-row:hover .idx-arrow { transform: translateX(4px); opacity: 1; }
+    .idx-arrow { transition: transform 0.4s ease, opacity 0.4s ease; opacity: 0.4; }
+
+    /* Vertical text */
+    .vert {
+      writing-mode: vertical-rl; transform: rotate(180deg);
+    }
+
+    /* Cursor spotlight */
+    #spotlight {
+      position: fixed; inset: 0; z-index: 3; pointer-events: none;
+      mix-blend-mode: screen;
+      background: radial-gradient(
+        circle 340px at var(--mx, 50%) var(--my, 50%),
+        rgba(255, 235, 190, 0.22) 0%,
+        rgba(201, 169, 97, 0.10) 30%,
+        rgba(255, 235, 190, 0.03) 55%,
+        transparent 70%
+      );
+      transition: opacity 0.5s ease;
+      opacity: 0;
+    }
+    body[data-loaded="true"] #spotlight { opacity: 1; }
+    #spotlight-core {
+      position: fixed; left: 0; top: 0; z-index: 4; pointer-events: none;
+      width: 14px; height: 14px; margin: -7px 0 0 -7px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,235,190,0.85), rgba(255,235,190,0) 70%);
+      transform: translate3d(var(--mx, -100px), var(--my, -100px), 0);
+      mix-blend-mode: screen;
+      transition: width 0.3s ease, height 0.3s ease;
+    }
+    @media (hover: none) {
+      #spotlight, #spotlight-core { display: none; }
+    }
+
+    /* Project Modal */
+    #modal {
+      position: fixed; inset: 0; z-index: 60; display: none;
+      align-items: center; justify-content: center;
+      background: rgba(5,5,5,0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      opacity: 0; transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 1.5vh 1.5vw;
+    }
+    #modal.open { display: flex; opacity: 1; }
+    #modal-card {
+      width: min(1480px, 97vw); height: min(96vh, 1280px);
+      background: #0D0D0D;
+      border: 1px solid rgba(242,239,232,0.10);
+      display: flex; flex-direction: column;
+      transform: translateY(20px) scale(0.985);
+      transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #modal.open #modal-card { transform: translateY(0) scale(1); }
+    #modal-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 1.5rem; padding: 1.25rem 2rem; border-bottom: 1px solid rgba(242,239,232,0.08);
+      flex-shrink: 0;
+    }
+    #modal-body {
+      flex: 1; overflow-y: auto; padding: 1.5rem 1rem; scrollbar-width: thin;
+      scrollbar-color: rgba(201,169,97,0.4) transparent;
+    }
+    #modal-body::-webkit-scrollbar { width: 8px; }
+    #modal-body::-webkit-scrollbar-thumb { background: rgba(201,169,97,0.35); }
+    #modal-close {
+      width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(242,239,232,0.18); color: #F2EFE8;
+      transition: background 0.3s ease, color 0.3s ease;
+      flex-shrink: 0; cursor: pointer;
+    }
+    #modal-close:hover { background: #C9A961; color: #0A0A0A; border-color: #C9A961; }
+    .modal-img {
+      width: 100%; height: auto; display: block; margin-bottom: 1.25rem;
+      background: #111; border: 1px solid rgba(242,239,232,0.06);
+    }
+    .modal-placeholder {
+      width: 100%; aspect-ratio: 16/10;
+      background: repeating-linear-gradient(45deg, #111, #111 12px, #1a1a1a 12px, #1a1a1a 24px);
+      border: 1px dashed rgba(201,169,97,0.3);
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      color: rgba(242,239,232,0.4); font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 1rem;
+    }
+    body.modal-open { overflow: hidden; }
+  </style>
+</head>
+<body class="font-sans antialiased overflow-x-hidden">
+
+  <!-- LOADING -->
+  <div id="loading">
+    <div class="flex flex-col items-center gap-6">
+      <div class="font-mono text-[10px] tracking-[0.3em] text-paper/50 uppercase">档案加载中 · Loading</div>
+      <div class="loader-bar"></div>
+      <div class="font-mono text-[10px] tracking-[0.3em] text-paper/30 uppercase">LZY · v2025.06</div>
+    </div>
+  </div>
+
+  <!-- VIDEO BG -->
+  <div id="video-bg" class="fixed inset-0 z-0 bg-black">
+    <video id="hero-video" muted playsinline preload="auto">
+      <source src="hero.mp4" type="video/mp4" />
+    </video>
+  </div>
+  <div id="video-tint"></div>
+  <div id="grain"></div>
+
+  <!-- CURSOR SPOTLIGHT -->
+  <div id="spotlight"></div>
+  <div id="spotlight-core"></div>
+
+  <!-- HEADER -->
+  <header class="fixed top-0 left-0 right-0 z-20 pointer-events-none">
+    <div class="flex items-center justify-between px-6 md:px-10 py-5 md:py-6">
+      <div class="pointer-on flex items-center gap-3">
+        <div class="w-2 h-2 rounded-full bg-brass animate-pulse"></div>
+        <a href="#top" class="font-mono text-[11px] tracking-[0.2em] uppercase link-hairline">LZY · 林治佚</a>
+      </div>
+      <nav class="pointer-on hidden md:flex items-center gap-8 font-mono text-[11px] tracking-[0.2em] uppercase">
+        <a href="#work" class="link-hairline opacity-80 hover:opacity-100">作品 Work</a>
+        <a href="#process" class="link-hairline opacity-80 hover:opacity-100">理念 Process</a>
+        <a href="#about" class="link-hairline opacity-80 hover:opacity-100">关于 About</a>
+        <a href="#index" class="link-hairline opacity-80 hover:opacity-100">索引 Index</a>
+      </nav>
+      <a href="#contact" class="pointer-on font-mono text-[11px] tracking-[0.2em] uppercase glass px-4 py-2 hover:bg-paper hover:text-ink transition-colors duration-500">
+        联系 / Contact ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="relative z-10 pointer-events-none" id="top">
+
+    <!-- HERO -->
+    <section class="min-h-screen flex flex-col justify-between px-6 md:px-10 pt-32 pb-10">
+      <div class="grid grid-cols-12 gap-6 md:gap-10 items-end flex-1">
+        <!-- left mono col -->
+        <aside class="col-span-12 md:col-span-3 font-mono text-[10px] md:text-[11px] tracking-[0.18em] uppercase text-paper/55 space-y-6">
+          <div>
+            <div class="text-paper/35 mb-1">身份 / Role</div>
+            <div>UI / UX · 衍生品方向</div>
+          </div>
+          <div>
+            <div class="text-paper/35 mb-1">所在 / Based</div>
+            <div>亚洲 · 远程</div>
+          </div>
+          <div>
+            <div class="text-paper/35 mb-1">从业 / Tenure</div>
+            <div>近 7 年 · 始于 2018</div>
+          </div>
+          <div>
+            <div class="text-paper/35 mb-1">履历 / Stack</div>
+            <div>BKEX → Gate.io</div>
+          </div>
+        </aside>
+
+        <!-- right hero -->
+        <div class="col-span-12 md:col-span-9">
+          <div class="font-mono text-[10px] tracking-[0.25em] uppercase text-brass mb-6 md:mb-10" data-reveal style="--reveal-delay: 0.1">
+            <span class="inline-block w-6 h-px bg-brass align-middle mr-3"></span>
+            档案 · 001 — 林治佚 作品集
+          </div>
+          <h1 class="font-light leading-[0.92] tracking-[-0.035em] text-paper text-[14vw] md:text-[8.2vw]" data-reveal style="--reveal-delay: 0.25">
+            <span class="block">UX Design</span>
+            <span class="block italic font-extralight text-paper/85"><span class="text-brass">Portfolio.</span></span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- bottom rail -->
+      <div class="grid grid-cols-12 gap-6 md:gap-10 mt-16">
+        <div class="col-span-12 md:col-span-3"></div>
+        <div class="col-span-12 md:col-span-6">
+          <p class="text-paper/75 text-base md:text-lg leading-relaxed max-w-2xl" data-reveal style="--reveal-delay: 0.5">
+            I'm <span class="font-semibold text-paper">Lin Zhiyi</span>, a UI/UX Designer with <span class="font-semibold text-paper">7 years' experience</span>, 3 in crypto derivatives at <span class="font-semibold text-paper">BKEX & Gate.io</span>.
+            I built design systems, optimized trading flows with <span class="font-semibold text-paper">95%+ implementation fidelity</span>, and iterate UX via business data.
+          </p>
+        </div>
+        <div class="col-span-12 md:col-span-3 flex md:justify-end items-end">
+          <a href="#work" class="pointer-on group inline-flex items-center gap-3 font-mono text-[11px] tracking-[0.2em] uppercase" data-reveal style="--reveal-delay: 0.7">
+            <span class="link-hairline">进入索引</span>
+            <span class="w-8 h-px bg-paper group-hover:w-12 transition-all duration-500"></span>
+            <span>↘</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- MARQUEE STRIP -->
+    <section class="border-y border-paper/10 py-4 md:py-5 backdrop-blur-md bg-ink/30">
+      <div class="marquee">
+        <div class="marquee-track font-mono text-[11px] tracking-[0.3em] uppercase text-paper/70">
+          <span>★ Nicki Portfolio</span><span>·</span><span>UX Designer</span><span>·</span><span>Futures</span><span>·</span><span>TradFi</span><span>·</span><span>Requirement Analysis</span><span>·</span><span>Experience &amp; Interaction</span><span>·</span>
+          <span>★ Nicki Portfolio</span><span>·</span><span>UX Designer</span><span>·</span><span>Futures</span><span>·</span><span>TradFi</span><span>·</span><span>Requirement Analysis</span><span>·</span><span>Experience &amp; Interaction</span><span>·</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- MANIFESTO / SCROLL REVEAL -->
+    <section id="process" class="px-6 md:px-10 py-32 md:py-44">
+      <div class="grid grid-cols-12 gap-6 md:gap-10">
+        <div class="col-span-12 md:col-span-2 font-mono text-[10px] tracking-[0.25em] uppercase text-paper/45">
+          <div class="md:sticky md:top-32">
+            <div class="text-brass mb-2">§ 02</div>
+            <div>设计哲学</div>
+          </div>
+        </div>
+        <div class="col-span-12 md:col-span-10">
+            <p class="text-paper/80 text-lg md:text-2xl leading-[1.6] font-light tracking-[-0.005em]">
+                            Design is not just what it looks like and feels like.Design is how it works.
+              </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SELECTED WORK / INDEX -->
+    <section id="work" class="px-6 md:px-10 py-20 md:py-28 border-t border-paper/10 backdrop-blur-md bg-ink/40">
+      <div class="grid grid-cols-12 gap-6 md:gap-10 mb-12 md:mb-16">
+        <div class="col-span-12 md:col-span-2 font-mono text-[10px] tracking-[0.25em] uppercase text-paper/45">
+          <div class="text-brass mb-2">§ 03</div>
+          <div>精选作品</div>
+        </div>
+        <div class="col-span-12 md:col-span-10 flex items-end justify-between flex-wrap gap-4">
+          <h3 class="text-3xl md:text-5xl font-light tracking-[-0.02em]" data-reveal>线上落地界面项目总览</h3>
+          <div class="font-mono text-[10px] tracking-[0.25em] uppercase text-paper/45" data-reveal style="--reveal-delay: 0.15">
+            06 条目 · 2022—2026
+          </div>
+        </div>
+      </div>
+
+      <!-- index rows -->
+      <ol class="border-t border-paper/10">
+        <li class="pointer-on idx-row grid grid-cols-12 gap-4 md:gap-8 items-center py-6 md:py-8 border-b border-paper/10 cursor-pointer" data-reveal data-project="01">
+          <div class="col-span-2 md:col-span-1 font-mono text-[11px] text-paper/45 numeral">01 /</div>
+          <div class="col-span-10 md:col-span-5">
+            <div class="text-xl md:text-3xl font-light tracking-[-0.01em]">永续合约 · 交易界面改版</div>
+            <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/45 mt-2">Gate.io · 设计师</div>
+          </div>
+          <div class="col-span-6 md:col-span-3 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            订单流 · 风险面板<br/>爆仓地图
+          </div>
+          <div class="col-span-4 md:col-span-2 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            2026 — 已上线
+          </div>
+          <div class="col-span-2 md:col-span-1 text-right idx-arrow font-mono text-base">↗</div>
+        </li>
+
+        <li class="pointer-on idx-row grid grid-cols-12 gap-4 md:gap-8 items-center py-6 md:py-8 border-b border-paper/10 cursor-pointer" data-reveal style="--reveal-delay: 0.1" data-project="02">
+          <div class="col-span-2 md:col-span-1 font-mono text-[11px] text-paper/45 numeral">02 /</div>
+          <div class="col-span-10 md:col-span-5">
+            <div class="text-xl md:text-3xl font-light tracking-[-0.01em]">TradFi 交易</div>
+            <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/45 mt-2">Gate.io · 全流程设计</div>
+          </div>
+          <div class="col-span-6 md:col-span-3 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            券商 · 黄金<br/>美股
+          </div>
+          <div class="col-span-4 md:col-span-2 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            2025 — 已上线
+          </div>
+          <div class="col-span-2 md:col-span-1 text-right idx-arrow font-mono text-base">↗</div>
+        </li>
+
+        <li class="pointer-on idx-row grid grid-cols-12 gap-4 md:gap-8 items-center py-6 md:py-8 border-b border-paper/10 cursor-pointer" data-reveal style="--reveal-delay: 0.2" data-project="03">
+          <div class="col-span-2 md:col-span-1 font-mono text-[11px] text-paper/45 numeral">03 /</div>
+          <div class="col-span-10 md:col-span-5">
+            <div class="text-xl md:text-3xl font-light tracking-[-0.01em]">合约跟单</div>
+            <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/45 mt-2">BKEX · 交易设计师</div>
+          </div>
+          <div class="col-span-6 md:col-span-3 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            跟单 · 带单
+          </div>
+          <div class="col-span-4 md:col-span-2 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            2024 — 已上线
+          </div>
+          <div class="col-span-2 md:col-span-1 text-right idx-arrow font-mono text-base">↗</div>
+        </li>
+
+        <li class="pointer-on idx-row grid grid-cols-12 gap-4 md:gap-8 items-center py-6 md:py-8 border-b border-paper/10 cursor-pointer" data-reveal style="--reveal-delay: 0.3" data-project="04">
+          <div class="col-span-2 md:col-span-1 font-mono text-[11px] text-paper/45 numeral">04 /</div>
+          <div class="col-span-10 md:col-span-5">
+            <div class="text-xl md:text-3xl font-light tracking-[-0.01em]">疯狂合约 · 界面设计</div>
+            <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/45 mt-2">BKEX · 交易设计师</div>
+          </div>
+          <div class="col-span-6 md:col-span-3 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            衍生品 · 高杠杆
+          </div>
+          <div class="col-span-4 md:col-span-2 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            2023 — 已上线
+          </div>
+          <div class="col-span-2 md:col-span-1 text-right idx-arrow font-mono text-base">↗</div>
+        </li>
+
+        <li class="pointer-on idx-row grid grid-cols-12 gap-4 md:gap-8 items-center py-6 md:py-8 border-b border-paper/10 cursor-pointer" data-reveal style="--reveal-delay: 0.4" data-project="05">
+          <div class="col-span-2 md:col-span-1 font-mono text-[11px] text-paper/45 numeral">05 /</div>
+          <div class="col-span-10 md:col-span-5">
+            <div class="text-xl md:text-3xl font-light tracking-[-0.01em]">Web3 / 社区</div>
+            <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/45 mt-2">Gate.io · BKEX · 产品设计师</div>
+          </div>
+          <div class="col-span-6 md:col-span-3 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            社交 · Web3<br/>圈子
+          </div>
+          <div class="col-span-4 md:col-span-2 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            2023 — 已上线
+          </div>
+          <div class="col-span-2 md:col-span-1 text-right idx-arrow font-mono text-base">↗</div>
+        </li>
+
+        <li class="pointer-on idx-row grid grid-cols-12 gap-4 md:gap-8 items-center py-6 md:py-8 border-b border-paper/10 cursor-pointer" data-reveal style="--reveal-delay: 0.5" data-project="06">
+          <div class="col-span-2 md:col-span-1 font-mono text-[11px] text-paper/45 numeral">06 /</div>
+          <div class="col-span-10 md:col-span-5">
+            <div class="text-xl md:text-3xl font-light tracking-[-0.01em]">落地页 / 后端 / 其他设计</div>
+            <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/45 mt-2">BKEX · 综合设计</div>
+          </div>
+          <div class="col-span-6 md:col-span-3 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            Web3 · 区块链<br/>白皮书
+          </div>
+          <div class="col-span-4 md:col-span-2 font-mono text-[10px] tracking-[0.2em] uppercase text-paper/55">
+            2022 — 已上线
+          </div>
+          <div class="col-span-2 md:col-span-1 text-right idx-arrow font-mono text-base">↗</div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- METRICS / METADATA -->
+    <section id="about" class="px-6 md:px-10 py-32 md:py-44">
+      <div class="grid grid-cols-12 gap-6 md:gap-10">
+        <div class="col-span-12 md:col-span-2 font-mono text-[10px] tracking-[0.25em] uppercase text-paper/45">
+          <div class="text-brass mb-2">§ 04</div>
+          <div>数据 · 履历</div>
+        </div>
+        <div class="col-span-12 md:col-span-10">
+          <div class="grid grid-cols-3 gap-y-12 md:gap-y-16 gap-x-6">
+            <div data-reveal>
+              <div class="font-mono text-[10px] tracking-[0.25em] uppercase text-paper/45 mb-3">从业年份</div>
+              <div class="numeral font-light text-5xl md:text-7xl">~7</div>
+              <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/45 mt-2">始于 2018</div>
+            </div>
+            <div data-reveal style="--reveal-delay: 0.1">
+              <div class="font-mono text-[10px] tracking-[0.25em] uppercase text-paper/45 mb-3">衍生品方向</div>
+              <div class="numeral font-light text-5xl md:text-7xl">3+</div>
+              <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/45 mt-2">年 · 专注</div>
+            </div>
+            <div data-reveal style="--reveal-delay: 0.2">
+              <div class="font-mono text-[10px] tracking-[0.25em] uppercase text-paper/45 mb-3">设计还原度</div>
+              <div class="numeral font-light text-5xl md:text-7xl">95<span class="text-brass">%</span></div>
+              <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/45 mt-2">稿件 → 代码</div>
+            </div>
+          </div>
+
+          <!-- About paragraph -->
+          <div class="mt-24 md:mt-32 grid grid-cols-12 gap-6 md:gap-10">
+            <div class="col-span-12 md:col-span-7" data-reveal>
+              <p class="text-paper/80 text-lg md:text-2xl leading-[1.6] font-light tracking-[-0.005em]">
+                I'm <em class="text-brass not-italic">Lin Zhiyi</em>, UI/UX Designer with 7 years' experience, 3 in crypto exchange derivatives.<br/><br/>
+                I built design systems, upgraded contracts and launched Launchpad at <em class="text-brass not-italic">BKEX &amp; Gate.io</em>, maintaining 95%+ design implementation fidelity.<br/><br/>
+                Data-driven UX solutions tailored for trading scenarios.
+              </p>
+            </div>
+            <div class="col-span-12 md:col-span-4 md:col-start-9 font-mono text-[11px] tracking-[0.2em] uppercase text-paper/55 space-y-3" data-reveal style="--reveal-delay: 0.2">
+              <div class="text-paper/35">能力 / Capabilities</div>
+              <div>→ 设计规范体系</div>
+              <div>→ 衍生品交易流</div>
+              <div>→ 0 → 1 产品搭建</div>
+              <div>→ 数据驱动迭代</div>
+              <div>→ 设计规范 / 交付</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT / CTA STRIP -->
+    <section id="contact" class="px-6 md:px-10 py-24 md:py-32 border-t border-paper/10 backdrop-blur-md bg-ink/40">
+      <div class="grid grid-cols-12 gap-6 md:gap-10 items-end">
+        <div class="col-span-12 md:col-span-8">
+          <div class="font-mono text-[10px] tracking-[0.25em] uppercase text-brass mb-6" data-reveal>
+            <span class="inline-block w-6 h-px bg-brass align-middle mr-3"></span>
+            § 05 — 开放档案
+          </div>
+          <h4 class="font-light tracking-[-0.025em] leading-[0.95] text-[8vw] md:text-[4.6vw]" data-reveal style="--reveal-delay: 0.15">
+            如果对我感兴趣，<br/>
+            <span class="italic text-paper/85">请联系我 <span class="text-brass not-italic">（添加请备注）</span></span>
+          </h4>
+        </div>
+        <div class="col-span-12 md:col-span-4 flex flex-col gap-4 md:items-end" data-reveal style="--reveal-delay: 0.3">
+          <a href="/cdn-cgi/l/email-protection#f3c2c3c3c1c7cacacac1c5b38282dd909c9e" class="pointer-on font-mono text-[11px] tracking-[0.2em] uppercase link-hairline">
+            邮箱 · <span class="__cf_email__" data-cfemail="82b3b2b2b0b6bbbbbbb0b4c2f3f3ace1edef">[email&#160;protected]</span> ↗
+          </a>
+          <a href="#" class="pointer-on font-mono text-[11px] tracking-[0.2em] uppercase link-hairline opacity-90">
+            微信 · Pochacc-o
+          </a>
+          <a href="/林治佚作品集-高级UX设计师-18111337764.pdf" class="pointer-on font-mono text-[11px] tracking-[0.2em] uppercase link-hairline opacity-70">
+            简历 / Resume · PDF ↗
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="index" class="px-6 md:px-10 pt-20 pb-10 border-t border-paper/10">
+      <div class="grid grid-cols-12 gap-6 md:gap-10 mb-20">
+        <div class="col-span-12 md:col-span-4">
+          <div class="font-mono text-[10px] tracking-[0.25em] uppercase text-paper/45 mb-4">版本说明 / Colophon</div>
+          <div class="text-3xl md:text-5xl font-light tracking-[-0.02em] leading-[1.05]">
+            林治佚<br/>
+            <span class="italic text-paper/65">— 一位衍生品设计师的档案</span>
+          </div>
+        </div>
+
+        <div class="col-span-6 md:col-span-2 md:col-start-6 font-mono text-[11px] tracking-[0.2em] uppercase space-y-3">
+          <div class="text-paper/45 mb-1">作品 / Work</div>
+          <a href="#work" class="pointer-on block link-hairline">永续合约</a>
+          <a href="#work" class="pointer-on block link-hairline">TradFi</a>
+          <a href="#work" class="pointer-on block link-hairline">Web3</a>
+          <a href="#work" class="pointer-on block link-hairline">落地页</a>
+        </div>
+        <div class="col-span-6 md:col-span-2 font-mono text-[11px] tracking-[0.2em] uppercase space-y-3">
+          <div class="text-paper/45 mb-1">关于 / About</div>
+          <a href="#about" class="pointer-on block link-hairline">简介</a>
+          <a href="#process" class="pointer-on block link-hairline">理念</a>
+          <a href="#" class="pointer-on block link-hairline">简历</a>
+          <a href="#" class="pointer-on block link-hairline">媒体</a>
+        </div>
+        <div class="col-span-6 md:col-span-2 font-mono text-[11px] tracking-[0.2em] uppercase space-y-3">
+          <div class="text-paper/45 mb-1">索引 / Index</div>
+          <a href="#top" class="pointer-on block link-hairline">回到顶部</a>
+          <a href="#contact" class="pointer-on block link-hairline">联系方式</a>
+          <a href="#" class="pointer-on block link-hairline">笔记</a>
+          <a href="#" class="pointer-on block link-hairline">归档</a>
+        </div>
+        <div class="col-span-6 md:col-span-2 font-mono text-[11px] tracking-[0.2em] uppercase space-y-3">
+          <div class="text-paper/45 mb-1">其他 / Elsewhere</div>
+          <a href="#" class="pointer-on block link-hairline">电话：181 1133 7764</a>
+        </div>
+      </div>
+
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-8 border-t border-paper/10 font-mono text-[10px] tracking-[0.25em] uppercase text-paper/50">
+        <div>© 2018 — 2025 · 林治佚 Lin Zhiyi · 版权所有</div>
+        <div class="flex gap-6">
+          <span>v2025.06 · Index</span>
+          <span class="text-brass">EST. 2018</span>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- PROJECT MODAL -->
+  <div id="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div id="modal-card">
+      <div id="modal-head">
+        <div class="min-w-0">
+          <div class="font-mono text-[10px] tracking-[0.25em] uppercase text-brass mb-2" id="modal-tag">项目 · 01</div>
+          <div class="text-2xl md:text-4xl font-light tracking-[-0.01em] text-paper truncate" id="modal-title">项目标题</div>
+          <div class="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/50 mt-2" id="modal-meta">公司 · 角色 · 年份</div>
+        </div>
+        <button id="modal-close" aria-label="关闭">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M1 1L13 13M13 1L1 13"/>
+          </svg>
+        </button>
+      </div>
+      <div id="modal-body">
+        <div id="modal-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+    // ===== Cursor spotlight =====
+    (function () {
+      const sp = document.getElementById('spotlight');
+      const core = document.getElementById('spotlight-core');
+      if (!sp || !core) return;
+      let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+      let tx = mx, ty = my;
+      const update = () => {
+        // smooth follow for core
+        tx += (mx - tx) * 0.18;
+        ty += (my - ty) * 0.18;
+        sp.style.setProperty('--mx', mx + 'px');
+        sp.style.setProperty('--my', my + 'px');
+        core.style.setProperty('--mx', tx + 'px');
+        core.style.setProperty('--my', ty + 'px');
+        requestAnimationFrame(update);
+      };
+      window.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
+      window.addEventListener('mouseleave', () => { sp.style.opacity = '0'; }, { passive: true });
+      window.addEventListener('mouseenter', () => { if (document.body.dataset.loaded === 'true') sp.style.opacity = '1'; }, { passive: true });
+      // grow on interactive hover
+      document.querySelectorAll('a, button, .pointer-on').forEach((el) => {
+        el.addEventListener('mouseenter', () => { core.style.width = '36px'; core.style.height = '36px'; core.style.margin = '-18px 0 0 -18px'; });
+        el.addEventListener('mouseleave', () => { core.style.width = '14px'; core.style.height = '14px'; core.style.margin = '-7px 0 0 -7px'; });
+      });
+      requestAnimationFrame(update);
+    })();
+
+    // ===== Video bg: load + scroll scrub =====
+    const VIDEO_URL = 'hero.mp4';
+    const video = document.getElementById('hero-video');
+    let isLoaded = false;
+
+    const handleLoaded = () => {
+      if (isLoaded) return;
+      isLoaded = true;
+      document.body.dataset.loaded = 'true';
+    };
+
+    if (video) {
+      video.addEventListener('loadeddata', handleLoaded);
+      video.addEventListener('canplay', handleLoaded);
+      video.addEventListener('canplaythrough', handleLoaded);
+      video.load();
+    }
+    setTimeout(handleLoaded, 3000);
+
+    window.addEventListener('scroll', () => {
+      if (!isLoaded || !video || !video.duration || video.seeking) return;
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      const scrollFraction = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+      video.currentTime = scrollFraction * video.duration;
+    }, { passive: true });
+
+    // ===== IntersectionObserver reveal =====
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.dataset.reveal = 'visible';
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '-50px' });
+    document.querySelectorAll('[data-reveal]').forEach((el) => revealObserver.observe(el));
+
+    // ===== GSAP word reveal =====
+    if (window.gsap && window.ScrollTrigger) {
+      gsap.registerPlugin(ScrollTrigger);
+      document.querySelectorAll('[data-scroll-reveal]').forEach((el) => {
+        const text = el.textContent || '';
+        el.textContent = '';
+        el.classList.add('scroll-reveal');
+        const p = document.createElement('p');
+        p.className = 'scroll-reveal-text ' + (el.dataset.textClass || '');
+        text.split(/(\s+)/).forEach((part) => {
+          if (!part) return;
+          const span = document.createElement('span');
+          span.className = 'word';
+          span.textContent = part;
+          p.appendChild(span);
+        });
+        el.appendChild(p);
+        gsap.fromTo(el, { rotate: 3, transformOrigin: '0% 50%' },
+          { rotate: 0, ease: 'none', scrollTrigger: { trigger: el, start: 'top bottom', end: 'bottom bottom', scrub: true } });
+        gsap.fromTo(p.querySelectorAll('.word'), { opacity: 0.1 },
+          { opacity: 1, stagger: 0.05, ease: 'none', scrollTrigger: { trigger: el, start: 'top bottom-=20%', end: 'bottom bottom', scrub: true } });
+        gsap.fromTo(p.querySelectorAll('.word'), { filter: 'blur(4px)' },
+          { filter: 'blur(0px)', stagger: 0.05, ease: 'none', scrollTrigger: { trigger: el, start: 'top bottom-=20%', end: 'bottom bottom', scrub: true } });
+      });
+    }
+
+    // ===== Project Modal =====
+    (function () {
+      const projects = {
+        '01': {
+          tag: '项目 · 01',
+          title: '永续合约 · 交易界面改版',
+          meta: 'Gate.io · 设计师 · 2026 已上线',
+          tags: ['订单流', '风险面板', '爆仓地图', '设计规范'],
+          slug: '01',
+          pages: 7,
+          ready: true
+        },
+        '02': {
+          tag: '项目 · 02',
+          title: 'TradFi 交易',
+          meta: 'Gate.io · 全流程设计 · 2025 已上线',
+          tags: ['券商', '黄金', '美股', '结算'],
+          slug: '02'
+        },
+        '03': {
+          tag: '项目 · 03',
+          title: '合约跟单',
+          meta: 'BKEX · 交易设计师 · 2024 已上线',
+          tags: ['跟单', '带单', '收益结算', '风险揭示'],
+          slug: '03'
+        },
+        '04': {
+          tag: '项目 · 04',
+          title: '疯狂合约 · 界面设计',
+          meta: 'BKEX · 交易设计师 · 2023 已上线',
+          tags: ['衍生品', '高杠杆', '极速交易'],
+          slug: '04'
+        },
+        '05': {
+          tag: '项目 · 05',
+          title: 'Web3/社区',
+          meta: 'BKEX · 产品设计师 · 2023 已上线',
+          tags: ['社交', 'Web3', '圈子'],
+          slug: '05'
+        },
+        '06': {
+          tag: '项目 · 06',
+          title: '落地页 / 后端 / 其他设计',
+          meta: 'BKEX · 综合设计 · 2022 已上线',
+          tags: ['Web3', '区块链', '白皮书', '落地页'],
+          slug: '06'
+        }
+      };
+
+      const modal = document.getElementById('modal');
+      const card = document.getElementById('modal-card');
+      const tagEl = document.getElementById('modal-tag');
+      const titleEl = document.getElementById('modal-title');
+      const metaEl = document.getElementById('modal-meta');
+      const contentEl = document.getElementById('modal-content');
+      const closeBtn = document.getElementById('modal-close');
+      const body = document.getElementById('modal-body');
+
+      function renderContent(p) {
+        const tagHtml = p.tags.map((t) => `<span class="inline-block px-3 py-1 mr-2 mb-2 border border-paper/15 text-paper/70 font-mono text-[10px] tracking-[0.2em] uppercase">${t}</span>`).join('');
+
+        let imgs = '';
+        const count = p.pages || 10;
+        for (let i = 1; i <= count; i++) {
+          const num = String(i).padStart(2, '0');
+          imgs += `<img class="modal-img" loading="lazy" src="projects/${p.slug}/${num}.jpg" alt="${p.title} - ${num}" onerror="this.style.display='none'" />`;
+        }
+
+        const placeholder = p.ready ? '' : `
+            <div class="modal-placeholder mb-8">
+              将作品图片放入 <span class="text-brass mx-1">projects/${p.slug}/</span> 文件夹<br/>
+              命名为 01.jpg ～ 10.jpg<br/>
+              页面会自动加载并按顺序展示
+            </div>`;
+
+        return `
+          <div class="">
+            <div class="mb-10">${tagHtml}</div>
+
+
+            ${imgs}
+
+            <div class="font-mono text-[10px] tracking-[0.25em] uppercase text-paper/45 mt-12 pt-8 border-t border-paper/10 flex justify-between">
+              <span>${p.meta}</span>
+              <span>END · ${p.tag}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      function openModal(id) {
+        const p = projects[id];
+        if (!p) return;
+        tagEl.textContent = p.tag;
+        titleEl.textContent = p.title;
+        metaEl.textContent = p.meta;
+        contentEl.innerHTML = renderContent(p);
+        body.scrollTop = 0;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+      }
+      function closeModal() {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+      }
+
+      document.querySelectorAll('[data-project]').forEach((row) => {
+        row.addEventListener('click', () => openModal(row.dataset.project));
+      });
+      closeBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+    })();
+  </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"75124c326cb447fe934cde04713ae013","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
